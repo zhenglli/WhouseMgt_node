@@ -4,21 +4,23 @@ var query = require('./query');
 var  jwt= require('jsonwebtoken')
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+// router.get('/', function(req, res, next) {
+//   res.send('respond with a resource');
+// });
 
 //1.添加用户注册路由
 router.post('/v1/register',(req,res)=>{
   // 获取前端传递的数据
   var info=req.body.params;
-  // console.log(info);
+  console.log(info);
   var $uname = info.uname;
   var $upwd = info.upwd;
   var $uphone = info.uphone;
+  var $email = info.email;
+  var $gender = info.gender=='男'?1:0;
   //执行sql语句
-  var sql='INSERT INTO wh_user(uname,upwd,uphone) values(?,md5(?),?)';
-  query(sql,[$uname,$upwd,$uphone]).then(result=>{
+  var sql='INSERT INTO wh_user(uname,upwd,uphone,email,gender) values(?,md5(?),?,?,?)';
+  query(sql,[$uname,$upwd,$email,$uphone,$gender]).then(result=>{
     if(result.affectedRows>0){
       res.send({code:200,msg:'registered successfully!'})
     }else{
@@ -31,9 +33,11 @@ router.post('/v1/register',(req,res)=>{
 router.post("/v1/login",(req, res)=>{
   let $uname=req.body.params.uname;
   let $upwd=req.body.params.upwd;
+  //console.log(req.body.params)
   let sql="SELECT uid,uname,upwd,token_id,status FROM wh_user WHERE uname = ? AND upwd = md5(?)";
   query(sql,[$uname,$upwd]).then(result=>{
       if(result.length>0){
+        //console.log(result);
         let token_id=result[0].token_id;
         let uid=result[0].uid;
         let uname=result[0].uname;
@@ -64,7 +68,7 @@ router.post("/v1/login",(req, res)=>{
       res.send({code:-1,mgs:"请先登录"})
       return;
     }
-    let sql="SELECT uid,uname,upwd,email,uphone,gender,real_name,status,token_id FROM wh_user where uid=?";
+    let sql="SELECT uid,uname,upwd,email,uphone,gender,token_id,status FROM wh_user where uid=?";
     query(sql,[uid]).then(result=>{
       // console.log(result)
         res.send({code:200,msg:"success",data:result[0]});
